@@ -6,7 +6,8 @@
 #import <Foundation/Foundation.h>
 
 @import UserNotifications;
-@import Firebase;
+@import FirebaseCore;
+@import FirebaseMessaging;
 
 // Implement UNUserNotificationCenterDelegate to receive display notification via APNS for devices
 // running iOS 10 and above. Implement FIRMessagingDelegate to receive data message via FCM for
@@ -212,7 +213,8 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
 }
 
 + (void)deleteInstanceId:(void (^)(NSError *error))handler {
-    [[FIRInstanceID instanceID] deleteIDWithHandler:handler];
+    // Dis method should be refactored.
+    //[[FIRInstanceID instanceID] deleteIDWithHandler:handler];
 }
 
 + (void)hasPushPermission:(void (^)(NSNumber* yesNoOrNil))block {
