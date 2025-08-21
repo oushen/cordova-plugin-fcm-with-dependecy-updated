@@ -202,11 +202,19 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
 }
 
 + (void)deleteInstanceId:(void (^)(NSError *error))handler {
-    [[FIRMessaging messaging] deleteTokenWithCompletion:^(NSError * _Nullable error) {
+    // In iOS SDK 11.15+, use FIRMessaging instead of FIRInstanceID
+    NSLog(@"Starting Firebase instance ID deletion...");
+
+    [[FIRMessaging messaging] deleteDataWithCompletion:^(NSError *error) {
         if (error) {
-            NSLog(@"Error deleting FCM token: %@", error.localizedDescription);
+            NSLog(@"Failed to delete Firebase instance ID: %@", error.localizedDescription);
         } else {
-            NSLog(@"FCM token deleted successfully");
+            NSLog(@"Successfully deleted Firebase instance ID");
+        }
+
+        // Call the original handler
+        if (handler) {
+            handler(error);
         }
     }];
 }
