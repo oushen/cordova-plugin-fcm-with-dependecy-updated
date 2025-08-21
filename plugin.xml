@@ -82,7 +82,9 @@
     <!-- IOS CONFIGURATION -->
     <platform name="ios">
         <preference name="IOS_FIREBASE_MESSAGING_VERSION" default="~> 11.15.0" />
+
         <config-file target="config.xml" parent="/*">
+            <preference name="deployment-target" value="13.0" />
             <feature name="FCMPlugin">
                 <param name="ios-package" value="FCMPlugin"/>
             </feature>
