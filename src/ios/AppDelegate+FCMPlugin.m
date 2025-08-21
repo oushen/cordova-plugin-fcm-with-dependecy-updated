@@ -72,22 +72,8 @@ FCMNotificationCenterDelegate *notificationCenterDelegate;
 }
 
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceTokenData {
-    [FIRMessaging messaging].APNSToken = deviceTokenData;
-    NSString *deviceToken;
-    if (@available(iOS 13, *)) {
-        deviceToken = [self hexadecimalStringFromData:deviceTokenData];
-    } else {
-        deviceToken = [[[[deviceTokenData description]
-            stringByReplacingOccurrencesOfString:@"<"withString:@""]
-            stringByReplacingOccurrencesOfString:@">" withString:@""]
-            stringByReplacingOccurrencesOfString:@" " withString:@""];
-    }
-    apnsToken = deviceToken;
     NSLog(@"Device APNS Token: %@", deviceToken);
-    if (@available(iOS 10, *)) {
-        return;
-    }
-    [FCMPluginIOS9Support application:application didRegisterForRemoteNotificationsWithDeviceToken:deviceTokenData];
+    [FIRMessaging messaging].APNSToken = deviceTokenData;
 }
 
 - (void)application:(UIApplication *)application didFailToRegisterForRemoteNotifications:(NSError *)error {
@@ -213,8 +199,13 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
 }
 
 + (void)deleteInstanceId:(void (^)(NSError *error))handler {
-    // Dis method should be refactored.
-    //[[FIRInstanceID instanceID] deleteIDWithHandler:handler];
+    [[FIRMessaging messaging] deleteTokenWithCompletion:^(NSError * _Nullable error) {
+        if (error) {
+            NSLog(@"Error deleting FCM token: %@", error.localizedDescription);
+        } else {
+            NSLog(@"FCM token deleted successfully");
+        }
+    }];
 }
 
 + (void)hasPushPermission:(void (^)(NSNumber* yesNoOrNil))block {
