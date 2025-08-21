@@ -12,6 +12,8 @@
 
 @implementation FCMPlugin
 
+static NSString*const LOG_TAG = @"FCMPlugin[native]";
+
 static BOOL appInForeground = YES;
 
 static NSString *notificationEventName = @"notification";
@@ -58,28 +60,49 @@ static FCMPlugin *fcmPluginInstance;
 }
 
 - (void)getToken:(CDVInvokedUrlCommand *)command {
-    NSLog(@"[FCMPlugin] get Token");
-    [self returnTokenOrRetry:^(NSString* fcmToken){
-        CDVPluginResult* pluginResult = nil;
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:fcmToken];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    [self _getToken:^(NSString *token, NSError *error) {
+        [self handleStringResultWithPotentialError:error command:command result:token];
     }];
 }
 
-- (void)returnTokenOrRetry:(void (^)(NSString* fcmToken))onSuccess {
-    NSString* fcmToken = [AppDelegate getFCMToken];
-    if(fcmToken != nil) {
-        onSuccess(fcmToken);
-        return;
+-(void)_getToken:(void (^)(NSString *token, NSError *error))completeBlock {
+    NSLog(@"%@: %@", LOG_TAG, '_getToken');
+    @try {
+        [[FIRMessaging messaging] tokenWithCompletion:^(NSString *token, NSError *error) {
+            @try {
+                completeBlock(token, error);
+            }@catch (NSException *exception) {
+                [self handlePluginExceptionWithoutContext:exception];
+            }
+        }];
+    }@catch (NSException *exception) {
+        [self handlePluginExceptionWithoutContext:exception];
     }
-    SEL thisMethodSelector = NSSelectorFromString(@"returnTokenOrRetry:");
-    NSLog(@"FCMToken unavailable, it'll retry in one second");
-    NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:[self methodSignatureForSelector:thisMethodSelector]];
-    [invocation setSelector:thisMethodSelector];
-    [invocation setTarget:self];
-    [invocation setArgument:&(onSuccess) atIndex:2]; //arguments 0 and 1 are self and _cmd respectively, automatically set by NSInvocationion
-    [NSTimer scheduledTimerWithTimeInterval:1 invocation:invocation repeats:NO];
 }
+
+// - (void)getToken:(CDVInvokedUrlCommand *)command {
+//     NSLog(@"[FCMPlugin] get Token");
+//     [self returnTokenOrRetry:^(NSString* fcmToken){
+//         CDVPluginResult* pluginResult = nil;
+//         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:fcmToken];
+//         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+//     }];
+// }
+//
+// - (void)returnTokenOrRetry:(void (^)(NSString* fcmToken))onSuccess {
+//     NSString* fcmToken = [AppDelegate getFCMToken];
+//     if(fcmToken != nil) {
+//         onSuccess(fcmToken);
+//         return;
+//     }
+//     SEL thisMethodSelector = NSSelectorFromString(@"returnTokenOrRetry:");
+//     NSLog(@"FCMToken unavailable, it'll retry in one second");
+//     NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:[self methodSignatureForSelector:thisMethodSelector]];
+//     [invocation setSelector:thisMethodSelector];
+//     [invocation setTarget:self];
+//     [invocation setArgument:&(onSuccess) atIndex:2]; //arguments 0 and 1 are self and _cmd respectively, automatically set by NSInvocationion
+//     [NSTimer scheduledTimerWithTimeInterval:1 invocation:invocation repeats:NO];
+// }
 
 - (void)getAPNSToken:(CDVInvokedUrlCommand *)command  {
     NSLog(@"get APNS Token");
@@ -225,6 +248,28 @@ static FCMPlugin *fcmPluginInstance;
         [FCMPlugin.fcmPlugin notifyOfMessage:lastPush];
     }
     appInForeground = YES;
+}
+
+- (void) handlePluginExceptionWithoutContext: (NSException*) exception
+{
+    [self _logError:[NSString stringWithFormat:@"EXCEPTION: %@", exception.reason]];
+}
+
+- (void) handlePluginErrorWithoutContext: (NSError*) error
+{
+    [self _logError:[NSString stringWithFormat:@"ERROR: %@", error.description]];
+}
+
+- (void)_logError: (NSString*)msg
+{
+    NSLog(@"%@ ERROR: %@", LOG_TAG, msg);
+//     NSString* jsString = [NSString stringWithFormat:@"console.error(\"%@: %@\")", LOG_TAG, [self escapeJavascriptString:msg]];
+//     [self executeGlobalJavascript:jsString];
+}
+
+- (void)_log: (NSString*)msg
+{
+    NSLog(@"%@: %@", LOG_TAG, msg);
 }
 
 @end
