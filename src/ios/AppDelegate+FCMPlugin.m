@@ -72,8 +72,11 @@ FCMNotificationCenterDelegate *notificationCenterDelegate;
 }
 
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceTokenData {
-    NSLog(@"Device APNS Token: %@", deviceToken);
     [FIRMessaging messaging].APNSToken = deviceTokenData;
+    NSString *deviceToken;
+    deviceToken = [self hexadecimalStringFromData:deviceTokenData];
+    apnsToken = deviceToken;
+    NSLog(@"Device APNS Token: %@", deviceToken);
 }
 
 - (void)application:(UIApplication *)application didFailToRegisterForRemoteNotifications:(NSError *)error {
