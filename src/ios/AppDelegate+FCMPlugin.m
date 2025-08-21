@@ -76,7 +76,7 @@ FCMNotificationCenterDelegate *notificationCenterDelegate;
     NSString *deviceToken;
     deviceToken = [self hexadecimalStringFromData:deviceTokenData];
     apnsToken = deviceToken;
-    NSLog(@"Device APNS Token: %@", deviceToken);
+    NSLog(@"[FCMPlugin] Device APNS Token: %@", deviceToken);
 }
 
 - (void)application:(UIApplication *)application didFailToRegisterForRemoteNotifications:(NSError *)error {
@@ -134,12 +134,14 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
 // [END message_handling]
 
 - (void)messaging:(nonnull FIRMessaging *)messaging didReceiveRegistrationToken:(NSString *)deviceToken {
-    NSLog(@"Device FCM Token: %@", deviceToken);
+    NSLog(@"[FCMPlugin] Device FCM Token: %@", deviceToken);
+
     if(deviceToken == nil) {
         fcmToken = nil;
         [FCMPlugin.fcmPlugin notifyFCMTokenRefresh:nil];
         return;
     }
+
     // Notify about received token.
     NSDictionary *dataDict = [NSDictionary dictionaryWithObject:deviceToken forKey:@"token"];
     [[NSNotificationCenter defaultCenter] postNotificationName:@"FCMToken" object:nil userInfo:dataDict];

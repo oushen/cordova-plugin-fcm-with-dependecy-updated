@@ -58,7 +58,7 @@ static FCMPlugin *fcmPluginInstance;
 }
 
 - (void)getToken:(CDVInvokedUrlCommand *)command {
-    NSLog(@"get Token");
+    NSLog(@"[FCMPlugin] get Token");
     [self returnTokenOrRetry:^(NSString* fcmToken){
         CDVPluginResult* pluginResult = nil;
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:fcmToken];
@@ -147,7 +147,7 @@ static FCMPlugin *fcmPluginInstance;
 }
 
 - (void)getInitialPushPayload:(CDVInvokedUrlCommand *)command {
-    NSLog(@"getInitialPushPayload");
+    NSLog(@"[FCMPlugin] getInitialPushPayload");
     [self.commandDelegate runInBackground:^{
         NSData* dataPayload = [AppDelegate getInitialPushPayload];
         if (dataPayload == nil) {
@@ -161,12 +161,12 @@ static FCMPlugin *fcmPluginInstance;
         NSDictionary *payloadDictionary = [NSJSONSerialization JSONObjectWithData:dataPayloadUTF8 options:0 error:&error];
         if (error) {
             NSString* errorMessage = [NSString stringWithFormat:@"%@ => '%@'", [error localizedDescription], strUTF8];
-            NSLog(@"getInitialPushPayload error: %@", errorMessage);
+            NSLog(@"[FCMPlugin] getInitialPushPayload error: %@", errorMessage);
             CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_JSON_EXCEPTION messageAsString:errorMessage];
             [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
             return;
         }
-        NSLog(@"getInitialPushPayload value: %@", payloadDictionary);
+        NSLog(@"[FCMPlugin] getInitialPushPayload value: %@", payloadDictionary);
         CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:payloadDictionary];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     }];
@@ -177,10 +177,10 @@ static FCMPlugin *fcmPluginInstance;
         [AppDelegate deleteInstanceId:^(NSError *error) {
             __block CDVPluginResult *commandResult;
             if(error == nil) {
-                NSLog(@"InstanceID deleted");
+                NSLog(@"[FCMPlugin] InstanceID deleted");
                 commandResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
             } else {
-                NSLog(@"InstanceID deletion error: %@", error);
+                NSLog(@"[FCMPlugin] InstanceID deletion error: %@", error);
                 commandResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error description]];
             }
             [self.commandDelegate sendPluginResult:commandResult callbackId:command.callbackId];
@@ -189,23 +189,23 @@ static FCMPlugin *fcmPluginInstance;
 }
 
 - (void)notifyOfMessage:(NSData *)payload {
-    NSLog(@"notifyOfMessage payload: %@", payload);
+    NSLog(@"[FCMPlugin] notifyOfMessage payload: %@", payload);
     NSString* JSONString = [[NSString alloc] initWithBytes:[payload bytes] length:[payload length] encoding:NSUTF8StringEncoding];
     [self dispatchJSEvent:notificationEventName withData:JSONString];
 }
 
 - (void)notifyFCMTokenRefresh:(NSString *)token {
-    NSLog(@"notifyFCMTokenRefresh token: %@", token);
+    NSLog(@"[FCMPlugin] notifyFCMTokenRefresh token: %@", token);
     NSString* jsToken = [NSString stringWithFormat:@"\"%@\"", token];
     [self dispatchJSEvent:tokenRefreshCallback withData:jsToken];
 }
 
 - (void)dispatchJSEvent:(NSString *)eventName withData:(NSString *)jsData {
     if(jsEventBridgeCallbackId == nil) {
-        NSLog(@"dispatchJSEvent: Unable to send event due to unreachable bridge context: %@ with %@", eventName, jsData);
+        NSLog(@"[FCMPlugin] dispatchJSEvent: Unable to send event due to unreachable bridge context: %@ with %@", eventName, jsData);
         return;
     }
-    NSLog(@"dispatchJSEvent: %@ with %@", eventName, jsData);
+    NSLog(@"[FCMPlugin] dispatchJSEvent: %@ with %@", eventName, jsData);
     NSString* eventDataTemplate = @"[\"%@\",%@]";
     NSString* eventData = [NSString stringWithFormat:eventDataTemplate, eventName, jsData];
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:eventData];
@@ -214,12 +214,12 @@ static FCMPlugin *fcmPluginInstance;
 }
 
 - (void)appEnterBackground {
-    NSLog(@"Set state background");
+    NSLog(@"[FCMPlugin] Set state background");
     appInForeground = NO;
 }
 
 - (void)appEnterForeground {
-    NSLog(@"Set state foreground");
+    NSLog(@"[FCMPlugin] Set state foreground");
     NSData* lastPush = [AppDelegate getLastPush];
     if (lastPush != nil) {
         [FCMPlugin.fcmPlugin notifyOfMessage:lastPush];
