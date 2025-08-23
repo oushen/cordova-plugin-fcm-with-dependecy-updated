@@ -8,7 +8,7 @@
 - (void)ready:(CDVInvokedUrlCommand*)command;
 - (void)hasPermission:(CDVInvokedUrlCommand*)command;
 - (void)getToken:(CDVInvokedUrlCommand*)command;
-- (void)returnTokenOrRetry:(void (^)(NSString* fcmToken))onSuccess;
+// - (void)returnTokenOrRetry:(void (^)(NSString* fcmToken))onSuccess;
 - (void)getAPNSToken:(CDVInvokedUrlCommand*)command;
 - (void)getInitialPushPayload:(CDVInvokedUrlCommand*)command;
 - (void)deleteInstanceId:(CDVInvokedUrlCommand*)command;

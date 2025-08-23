@@ -61,15 +61,18 @@ static FCMPlugin *fcmPluginInstance;
 
 - (void)getToken:(CDVInvokedUrlCommand *)command {
     [self _getToken:^(NSString *token, NSError *error) {
-        [self handleStringResultWithPotentialError:error command:command result:token];
+         CDVPluginResult* pluginResult = nil;
+         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:token];
+         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     }];
 }
 
 -(void)_getToken:(void (^)(NSString *token, NSError *error))completeBlock {
-    NSLog(@"%@: %@", LOG_TAG, '_getToken');
+    [self _log:@" -> _getToken"];
     @try {
         [[FIRMessaging messaging] tokenWithCompletion:^(NSString *token, NSError *error) {
             @try {
+                [self _log:[NSString stringWithFormat:@"Token: %@", token]];
                 completeBlock(token, error);
             }@catch (NSException *exception) {
                 [self handlePluginExceptionWithoutContext:exception];
@@ -105,11 +108,11 @@ static FCMPlugin *fcmPluginInstance;
 // }
 
 - (void)getAPNSToken:(CDVInvokedUrlCommand *)command  {
-    NSLog(@"get APNS Token");
+    [self _log:@"-> getAPNSToken"];
     [self.commandDelegate runInBackground:^{
         CDVPluginResult* pluginResult = nil;
         NSString* apnsToken = [AppDelegate getAPNSToken];
-        NSLog(@"get APNS Token value: %@", apnsToken);
+        [self _log:[NSString stringWithFormat:@"APNS Token value: %@", apnsToken]];
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:apnsToken];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     }];
